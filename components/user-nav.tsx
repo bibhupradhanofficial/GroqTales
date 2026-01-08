@@ -61,7 +61,7 @@ export function UserNav() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64" align="end">
-        <DropdownMenuLabel className="bg-yellow-400 text-black italic border-b-2 border-black">User Options</DropdownMenuLabel>
+        <DropdownMenuLabel className="bg-yellow-400 dark:bg-yellow-700 text-foreground italic border-b-2 border-foreground">User Options</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild className="cursor-pointer">
@@ -91,7 +91,7 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <div className="px-4 py-3 bg-muted/20">
           <p className="text-xs font-black uppercase text-muted-foreground italic mb-1">Authenticated Wallet:</p>
-          <p className="text-xs font-black uppercase tracking-widest bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <p className="text-xs font-black uppercase tracking-widest bg-card border-2 border-foreground px-2 py-1 shadow-[2px_2px_0px_0px_var(--shadow-color)]">
             {truncateAddress(account)}
           </p>
         </div>
