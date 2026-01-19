@@ -23,7 +23,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
 import { useToast } from '@/components/ui/use-toast';
 import { truncateAddress } from '@/lib/utils';
 
@@ -114,10 +113,10 @@ export default function WalletConnect() {
             <span>Connecting...</span>
           </>
         ) : (
-          <>
+          <div className="flex items-center gap-2 dark:hover:text-white">
             <Wallet className="h-5 w-5" />
             <span>Connect Wallet</span>
-          </>
+          </div>
         )}
       </Button>
     );

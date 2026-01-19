@@ -10,8 +10,8 @@ import {
   Trophy,
   Menu,
 } from 'lucide-react';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 
@@ -125,7 +125,7 @@ export function Header() {
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -20 }}
+      initial={false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
@@ -164,7 +164,7 @@ export function Header() {
                     ? `dropdown-${item.label}`
                     : item.href || `item-${index}`
                 }
-                initial={{ opacity: 0, y: -10 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 + 0.1, duration: 0.2 }}
                 whileHover={{ scale: 1.03 }}
@@ -208,7 +208,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="hidden md:block">
+          <div className="hidden md:block dark:hover:bg-gray-700">
             <WalletConnect />
           </div>
           <Button

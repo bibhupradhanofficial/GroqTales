@@ -143,8 +143,8 @@ router.post('/mint', async (req, res) => {
       metadataURI,
       metadata,
       mintedAt: new Date(),
-      mintedBy: req.user._id,
-      owner: req.user._id,
+      mintedBy: req.user.id,
+      owner: req.user.id,
       price,
       isListed: false,
     });

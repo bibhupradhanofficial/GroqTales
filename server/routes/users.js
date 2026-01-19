@@ -4,41 +4,47 @@
  */
 
 const express = require('express');
+const User = require('../models/User');
 const router = express.Router();
 
 // GET /api/v1/users/profile - Get user profile
 router.get('/profile', async (req, res) => {
   try {
-    const profile = {
-      id: 'user123',
-      username: 'storyteller',
-      email: 'user@example.com',
-      preferences: {
-        favoriteGenres: ['fantasy', 'sci-fi'],
-        theme: 'dark',
-      },
-      createdAt: new Date().toISOString(),
-    };
+    const profile = await User.findById(req.user.id)
+      .select('-password -refreshToken')
+      .lean();
+    if (!profile) return res.status(404).json({ error: 'Profile not found' });
 
-    res.json(profile);
+    return res.json(profile);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
 
-// PUT /api/v1/users/profile - Update user profile
-router.put('/profile', async (req, res) => {
+// PATCH /api/v1/users/update - Update user profile
+router.patch('/update', async (req, res) => {
   try {
     const updates = req.body;
+    if(updates.password || updates.role) {
+      return res.status(400).json({ error: 'Cannot update password or role via this endpoint' });
+    }
+    const allowed = ['firstName', 'lastName', 'phone', 'walletAddress', 'email'];
+    Object.keys(updates).forEach(key => {
+      if (!allowed.includes(key)) {
+        delete updates[key];
+      }
+    });
+    const updatedProfile = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { ...updates } },
+      { new: true, upsert: false, runValidators: true }
+    ).lean();
+    if (!updatedProfile)
+      return res.status(404).json({ error: 'Profile not found' });
 
-    const updatedProfile = {
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-
-    res.json(updatedProfile);
+    return res.json(updatedProfile);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
 
