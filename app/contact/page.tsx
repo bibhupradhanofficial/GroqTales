@@ -164,7 +164,11 @@ export default function ContactPage() {
                               Name
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="YOUR NAME" {...field} />
+                              <Input
+                                placeholder="YOUR NAME"
+                                {...field}
+                                className="dark:placeholder-black"
+                              />
                             </FormControl>
                             <FormMessage className="font-bold text-red-500" />
                           </FormItem>
@@ -179,7 +183,11 @@ export default function ContactPage() {
                               Email
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="YOUR@EMAIL.COM" {...field} />
+                              <Input
+                                placeholder="YOUR@EMAIL.COM"
+                                {...field}
+                                className="dark:placeholder-black"
+                              />
                             </FormControl>
                             <FormMessage className="font-bold text-red-500" />
                           </FormItem>
@@ -197,6 +205,7 @@ export default function ContactPage() {
                               <Input
                                 placeholder="WHAT'S THIS ABOUT?"
                                 {...field}
+                                className="dark:placeholder-black"
                               />
                             </FormControl>
                             <FormMessage className="font-bold text-red-500" />
@@ -214,7 +223,7 @@ export default function ContactPage() {
                             <FormControl>
                               <Textarea
                                 placeholder="YOUR MESSAGE..."
-                                className="min-h-[120px]"
+                                className="min-h-[120px] dark:placeholder-black"
                                 {...field}
                               />
                             </FormControl>
@@ -224,7 +233,7 @@ export default function ContactPage() {
                       />
                       <Button
                         type="submit"
-                        className="w-full text-xl py-6"
+                        className="w-full text-xl py-6 text-black"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? 'Sending...' : 'Send Message'}
@@ -285,7 +294,7 @@ export default function ContactPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <Button
                       variant="outline"
-                      className="w-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+                      className="w-full text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
                       asChild
                     >
                       <Link href="https://github.com/Drago-03/" target="_blank">
@@ -295,7 +304,7 @@ export default function ContactPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
+                      className="w-full text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
                       asChild
                     >
                       <Link

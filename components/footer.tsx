@@ -41,6 +41,11 @@ export function Footer() {
       url: 'https://www.linkedin.com/company/indie-hub-exe/?viewAsMember=true',
       label: 'LinkedIn',
     },
+    {
+      icon: <Twitter className="h-5 w-5" />,
+      url: 'https://x.com',
+      label: 'Twitter',
+    },
   ];
 
   return (
