@@ -12,8 +12,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { useState } from 'react';
 
+import StoryCommentsDialog from '@/components/story-comments-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -51,6 +52,8 @@ interface StoryCardProps {
   viewMode?: 'grid' | 'list';
   hideLink?: boolean;
   showCreateButton?: boolean;
+  isWalletConnected?: boolean;
+  isAdmin?: boolean;
 }
 
 export function StoryCard({
@@ -58,8 +61,11 @@ export function StoryCard({
   viewMode = 'grid',
   hideLink = false,
   showCreateButton = false,
+  isWalletConnected = false,
+  isAdmin = false,
 }: StoryCardProps) {
   const router = useRouter();
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
   // Extract author information
   const authorName =
@@ -142,10 +148,17 @@ export function StoryCard({
               </div>
             )}
             {story.comments !== undefined && (
-              <div className="flex items-center">
+              <button
+                className="flex items-center hover:text-amber-600 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCommentsOpen(true);
+                }}
+                aria-label="View comments"
+              >
                 <MessageSquare className="h-3.5 w-3.5 mr-1" />
                 {story.comments}
-              </div>
+              </button>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -172,42 +185,54 @@ export function StoryCard({
   );
 
   return (
-    <motion.div
-      whileHover={{
-        y: -5,
-        scale: 1.02,
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-      }}
-      transition={{ duration: 0.2 }}
-      className="nft-pulse"
-    >
-      <Card
-        className={cn(
-          'overflow-hidden transition-all duration-200 hover:shadow-md group focus-within:ring-2 focus-within:ring-primary',
-          isGrid ? 'h-full' : 'flex gap-4'
-        )}
+    <>
+      <motion.div
+        whileHover={{
+          y: -5,
+          scale: 1.02,
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        }}
+        transition={{ duration: 0.2 }}
+        className="nft-pulse"
       >
-        {hideLink ? (
-          <div className="block">{cardContent}</div>
-        ) : (
-          <div
-            className="block cursor-pointer outline-none"
-            onClick={handleViewNFT}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleViewNFT();
-              }
-            }}
-            aria-label={`View story: ${story.title}`}
-          >
-            {cardContent}
-          </div>
-        )}
-      </Card>
-    </motion.div>
+        <Card
+          className={cn(
+            'overflow-hidden transition-all duration-200 hover:shadow-md group focus-within:ring-2 focus-within:ring-primary',
+            isGrid ? 'h-full' : 'flex gap-4'
+          )}
+        >
+          {hideLink ? (
+            <div className="block">{cardContent}</div>
+          ) : (
+            <div
+              className="block cursor-pointer outline-none"
+              onClick={handleViewNFT}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleViewNFT();
+                }
+              }}
+              aria-label={`View story: ${story.title}`}
+            >
+              {cardContent}
+            </div>
+          )}
+        </Card>
+      </motion.div>
+
+      {/* Comments Dialog */}
+      <StoryCommentsDialog
+        isOpen={isCommentsOpen}
+        onClose={() => setIsCommentsOpen(false)}
+        storyTitle={story.title}
+        storyId={story.id}
+        isWalletConnected={isWalletConnected}
+        isAdmin={isAdmin}
+      />
+    </>
   );
 }
 // Default export for backward compatibility
