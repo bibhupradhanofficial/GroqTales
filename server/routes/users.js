@@ -10,7 +10,7 @@ const router = express.Router();
 const { authRequired } = require('../middleware/auth');
 
 // GET /api/v1/users/profile - Get user profile
-router.get('/profile', authRequired , async (req, res) => {
+router.get('/profile', authRequired, async (req, res) => {
   try {
     const profile = await User.findById(req.user.id)
       .select('-password -refreshToken')
@@ -63,11 +63,19 @@ router.get('/me', authRequired , async (req, res) => {
 router.patch('/update', authRequired, async (req, res) => {
   try {
     const updates = req.body;
-    if(updates.password || updates.role) {
-      return res.status(400).json({ error: 'Cannot update password or role via this endpoint' });
+    if (updates.password || updates.role) {
+      return res
+        .status(400)
+        .json({ error: 'Cannot update password or role via this endpoint' });
     }
-    const allowed = ['firstName', 'lastName', 'phone', 'walletAddress', 'email'];
-    Object.keys(updates).forEach(key => {
+    const allowed = [
+      'firstName',
+      'lastName',
+      'phone',
+      'walletAddress',
+      'email',
+    ];
+    Object.keys(updates).forEach((key) => {
       if (!allowed.includes(key)) {
         delete updates[key];
       }

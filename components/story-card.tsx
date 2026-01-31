@@ -121,7 +121,7 @@ export function StoryCard({
         <CardHeader className="p-4 pb-2">
           <div className="flex items-center space-x-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={authorAvatar} />
+              <AvatarImage src={authorAvatar} alt={`${authorName}'s avatar`} />
               <AvatarFallback>{authorName?.[0] || 'U'}</AvatarFallback>
             </Avatar>
             <p className="text-sm font-medium">{authorName}</p>
@@ -135,7 +135,7 @@ export function StoryCard({
             {storyContent}
           </p>
         </CardContent>
-        <CardFooter className="p-4 pt-0 flex justify-between">
+        <CardFooter className="p-4 pt-0 flex flex-wrap gap-2 justify-between">
           <div className="flex space-x-4 text-sm text-gray-600 dark:text-muted-foreground">
             <div className="flex items-center">
               <Heart className="h-3.5 w-3.5 mr-1" />
@@ -154,14 +154,14 @@ export function StoryCard({
                   e.stopPropagation();
                   setIsCommentsOpen(true);
                 }}
-                aria-label="View comments"
+                aria-label={`View ${story.comments || 0} comments for ${story.title}`}
               >
                 <MessageSquare className="h-3.5 w-3.5 mr-1" />
                 {story.comments}
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             {story.genre && (
               <span className="text-xs bg-amber-100 dark:bg-muted px-2 py-1 rounded-full text-gray-800 dark:text-white">
                 {story.genre}
@@ -172,7 +172,7 @@ export function StoryCard({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                title="Create Similar Story"
+                aria-label={`Create a story similar to ${story.title}`}
                 onClick={handleCreateSimilar}
               >
                 <PenSquare className="h-3.5 w-3.5" />
