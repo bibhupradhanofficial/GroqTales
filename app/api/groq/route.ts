@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
           tone: updatedOptions?.tone,
           characters: updatedOptions?.characters,
           setting: updatedOptions?.setting,
-          apiKey: updatedOptions?.apiKey,
         });
         break;
       case 'analyze':
