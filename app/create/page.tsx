@@ -175,6 +175,12 @@ export default function CreateStoryPage() {
   const latestSignatureRef = useRef('');
   const storyDataRef = useRef(storyData);
   const draftSyncErrorRef = useRef<string | null>(null);
+  const showRecoveryModalRef = useRef(false);
+
+  const setRecoveryModalVisible = useCallback((visible: boolean) => {
+    showRecoveryModalRef.current = visible;
+    setShowRecoveryModal(visible);
+  }, []);
 
   useEffect(() => {
     storyDataRef.current = storyData;
@@ -443,7 +449,7 @@ export default function CreateStoryPage() {
 
           if (hasSnapshotContent(localDraft.current)) {
             setRecoveredDraft(localDraft);
-            setShowRecoveryModal(true);
+            setRecoveryModalVisible(true);
           }
         }
 
@@ -462,7 +468,7 @@ export default function CreateStoryPage() {
     };
 
     checkAuth();
-  }, [account, hasSnapshotContent, router, toast]);
+  }, [account, hasSnapshotContent, router, setRecoveryModalVisible, toast]);
 
   // Try to hydrate from backend if a newer server draft exists.
   useEffect(() => {
@@ -506,9 +512,12 @@ export default function CreateStoryPage() {
         setDraftVersions(hydrated.versions);
         setLastSavedAt(hydrated.updatedAt);
 
-        if (hasSnapshotContent(hydrated.current)) {
+        if (
+          hasSnapshotContent(hydrated.current) &&
+          !showRecoveryModalRef.current
+        ) {
           setRecoveredDraft(hydrated);
-          setShowRecoveryModal(true);
+          setRecoveryModalVisible(true);
         }
       } catch (error: any) {
         if (error?.name !== 'AbortError') {
@@ -521,7 +530,7 @@ export default function CreateStoryPage() {
     return () => {
       controller.abort();
     };
-  }, [account, draftKey, hasSnapshotContent]);
+  }, [account, draftKey, hasSnapshotContent, setRecoveryModalVisible]);
 
   // Autosave every X seconds.
   useEffect(() => {
@@ -648,6 +657,25 @@ export default function CreateStoryPage() {
     });
   };
 
+  const deleteRemoteDraft = useCallback(async (targetDraftKey: string) => {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      controller.abort();
+    }, DRAFT_SYNC_TIMEOUT_MS);
+
+    try {
+      await fetch(
+        `${DRAFT_SYNC_ENDPOINT}?draftKey=${encodeURIComponent(targetDraftKey)}`,
+        {
+          method: 'DELETE',
+          signal: controller.signal,
+        }
+      );
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }, []);
+
   const handleGoBack = () => {
     void persistDraft('manual', storyData, true);
     router.push('/');
@@ -664,8 +692,9 @@ export default function CreateStoryPage() {
   };
 
   const handleGenreChange = (value: string) => {
+    const latestData = storyDataRef.current;
     const nextData = {
-      ...storyData,
+      ...latestData,
       genre: value,
     };
 
@@ -690,7 +719,7 @@ export default function CreateStoryPage() {
       void persistDraft(
         'manual',
         {
-          ...storyData,
+          ...storyDataRef.current,
           coverImage: file,
         },
         true
@@ -897,12 +926,7 @@ export default function CreateStoryPage() {
         setActiveDraftKey(null);
 
         try {
-          await fetch(
-            `${DRAFT_SYNC_ENDPOINT}?draftKey=${encodeURIComponent(draftKey)}`,
-            {
-              method: 'DELETE',
-            }
-          );
+          await deleteRemoteDraft(draftKey);
         } catch (error) {
           console.warn('Could not delete synced draft:', error);
         }
@@ -1041,7 +1065,7 @@ export default function CreateStoryPage() {
                         });
                         setDraftVersions(recoveredDraft.versions);
                         setLastSavedAt(recoveredDraft.updatedAt);
-                        setShowRecoveryModal(false);
+                        setRecoveryModalVisible(false);
                         setRecoveredDraft(null);
                         toast({
                           title: 'DRAFT RESTORED!',
@@ -1059,19 +1083,14 @@ export default function CreateStoryPage() {
                         if (draftKey) {
                           clearDraftRecord(draftKey);
                           setActiveDraftKey(null);
-                          void fetch(
-                            `${DRAFT_SYNC_ENDPOINT}?draftKey=${encodeURIComponent(draftKey)}`,
-                            {
-                              method: 'DELETE',
-                            }
-                          ).catch((error) => {
+                          void deleteRemoteDraft(draftKey).catch((error) => {
                             console.warn(
                               'Failed to delete remote draft:',
                               error
                             );
                           });
                         }
-                        setShowRecoveryModal(false);
+                        setRecoveryModalVisible(false);
                         setRecoveredDraft(null);
                         setDraftVersions([]);
                         setLastSavedAt(null);

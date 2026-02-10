@@ -41,10 +41,12 @@ const DRAFT_STORE_KEY = 'groqtales_story_drafts_store_v1';
 const LEGACY_DRAFT_KEY = 'groqtales_text_story_draft_v1';
 const DEFAULT_MAX_VERSIONS = 5;
 
-const EMPTY_STORE: StoryDraftStore = {
-  activeDraftKey: null,
-  drafts: {},
-};
+function createEmptyStore(): StoryDraftStore {
+  return {
+    activeDraftKey: null,
+    drafts: {},
+  };
+}
 
 function hasStorage(): boolean {
   return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
@@ -52,13 +54,13 @@ function hasStorage(): boolean {
 
 function readStore(): StoryDraftStore {
   if (!hasStorage()) {
-    return { ...EMPTY_STORE };
+    return createEmptyStore();
   }
 
   try {
     const raw = localStorage.getItem(DRAFT_STORE_KEY);
     if (!raw) {
-      return { ...EMPTY_STORE };
+      return createEmptyStore();
     }
 
     const parsed = JSON.parse(raw) as StoryDraftStore;
@@ -67,7 +69,7 @@ function readStore(): StoryDraftStore {
       drafts: parsed.drafts ?? {},
     };
   } catch {
-    return { ...EMPTY_STORE };
+    return createEmptyStore();
   }
 }
 

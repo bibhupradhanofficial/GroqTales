@@ -214,4 +214,22 @@ describe('story-draft-manager', () => {
     expect(getDraftRecord(draftKey)?.current.content).toBe('Legacy content');
     expect(localStorage.getItem('groqtales_text_story_draft_v1')).toBeNull();
   });
+
+  test('returns empty store when persisted store is corrupted', () => {
+    const draftKey = createDraftKey('unit');
+
+    saveDraftSnapshot({
+      draftKey,
+      storyType: 'text',
+      storyFormat: 'free',
+      snapshot: makeSnapshot({ title: 'Corruption test' }),
+      reason: 'manual',
+      maxVersions: 5,
+    });
+
+    localStorage.setItem('groqtales_story_drafts_store_v1', '{broken-json');
+
+    expect(getDraftRecord(draftKey)).toBeNull();
+    expect(getLatestDraftRecord()).toBeNull();
+  });
 });
