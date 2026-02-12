@@ -6,9 +6,21 @@ import { recordRoyaltyTransaction } from '@/lib/royalty-service';
 /**
  * POST /api/royalties/record
  * Record a royalty transaction when an NFT sale occurs.
+ * Protected: requires x-internal-api-key header matching INTERNAL_API_KEY env var.
  */
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate internal callers via API key
+    const apiKey = request.headers.get('x-internal-api-key');
+    const expectedKey = process.env.INTERNAL_API_KEY;
+
+    if (!expectedKey || apiKey !== expectedKey) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
     let body;
@@ -38,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (salePrice === undefined || salePrice === null || salePrice <= 0) {
+    if (salePrice === undefined || salePrice === null || typeof salePrice !== 'number' || isNaN(salePrice) || salePrice <= 0) {
       return NextResponse.json(
         { success: false, error: 'salePrice must be a positive number' },
         { status: 400 }

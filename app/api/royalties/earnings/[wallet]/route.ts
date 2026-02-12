@@ -15,6 +15,10 @@ export async function GET(
 
     const { wallet } = params;
 
+    // TODO: Add wallet ownership verification once auth is implemented.
+    // Currently any caller can fetch earnings for any wallet address.
+    // Should verify that the authenticated user owns the requested wallet.
+
     if (!wallet) {
       return NextResponse.json(
         { success: false, error: 'Wallet address is required' },

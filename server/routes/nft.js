@@ -15,9 +15,9 @@ const logger = require('../utils/logger');
 
 const Nft = require('../models/Nft');
 const Story = require('../models/Story');
-const RoyaltyConfig = require('../../models/RoyaltyConfig').default;
-const RoyaltyTransaction = require('../../models/RoyaltyTransaction').default;
-const CreatorEarnings = require('../../models/CreatorEarnings').default;
+const RoyaltyConfig = require('../models/RoyaltyConfig');
+const RoyaltyTransaction = require('../models/RoyaltyTransaction');
+const CreatorEarnings = require('../models/CreatorEarnings');
 
 const { authRequired } = require('../middleware/auth');
 
@@ -352,42 +352,71 @@ router.patch('/buy/:tokenId', authRequired, async (req, res) => {
     await nft.save();
 
     // Record royalty transaction (non-blocking, non-critical)
-    try {
-      const royaltyConfig = await RoyaltyConfig.findOne({
-        nftId: nft._id,
-        isActive: true,
-      });
+    const sellerWallet = req.body.sellerWallet;
+    const buyerWallet = req.body.buyerWallet;
 
-      if (royaltyConfig) {
-        const royaltyAmount = salePrice * (royaltyConfig.royaltyPercentage / 100);
-
-        await RoyaltyTransaction.create({
+    if (sellerWallet && buyerWallet) {
+      try {
+        const royaltyConfig = await RoyaltyConfig.findOne({
           nftId: nft._id,
-          salePrice,
-          royaltyAmount,
-          royaltyPercentage: royaltyConfig.royaltyPercentage,
-          sellerWallet: req.body.sellerWallet || previousOwner.toString(),
-          buyerWallet: req.body.buyerWallet || req.user.id,
-          creatorWallet: royaltyConfig.creatorWallet,
-          txHash: req.body.txHash || null,
-          status: 'completed',
+          isActive: true,
         });
 
-        await CreatorEarnings.findOneAndUpdate(
-          { creatorWallet: royaltyConfig.creatorWallet },
-          {
-            $inc: { totalEarned: royaltyAmount, pendingPayout: royaltyAmount, totalSales: 1 },
-            $set: { lastUpdated: new Date() },
-          },
-          { upsert: true }
-        );
+        if (royaltyConfig) {
+          const royaltyAmount = salePrice * (royaltyConfig.royaltyPercentage / 100);
+
+          // Step 1: Create transaction as pending
+          const royaltyTx = await RoyaltyTransaction.create({
+            nftId: nft._id,
+            salePrice,
+            royaltyAmount,
+            royaltyPercentage: royaltyConfig.royaltyPercentage,
+            sellerWallet,
+            buyerWallet,
+            creatorWallet: royaltyConfig.creatorWallet,
+            txHash: req.body.txHash || null,
+            status: 'pending',
+          });
+
+          try {
+            // Step 2: Update creator earnings atomically
+            await CreatorEarnings.findOneAndUpdate(
+              { creatorWallet: royaltyConfig.creatorWallet },
+              {
+                $inc: { totalEarned: royaltyAmount, pendingPayout: royaltyAmount, totalSales: 1 },
+                $set: { lastUpdated: new Date() },
+              },
+              { upsert: true }
+            );
+
+            // Step 3: Mark transaction as completed
+            royaltyTx.status = 'completed';
+            await royaltyTx.save();
+          } catch (earningsError) {
+            // If earnings update fails, mark transaction as failed
+            royaltyTx.status = 'failed';
+            await royaltyTx.save();
+            logger.error('Royalty earnings update failed', {
+              requestId: req.id,
+              component: 'nft-royalty',
+              transactionId: royaltyTx._id,
+              error: earningsError.message,
+            });
+          }
+        }
+      } catch (royaltyError) {
+        logger.error('Royalty tracking failed (non-critical)', {
+          requestId: req.id,
+          component: 'nft-royalty',
+          tokenId,
+          error: royaltyError.message,
+        });
       }
-    } catch (royaltyError) {
-      logger.error('Royalty tracking failed (non-critical)', {
+    } else {
+      logger.warn('Skipping royalty tracking - wallet addresses not provided', {
         requestId: req.id,
         component: 'nft-royalty',
         tokenId,
-        error: royaltyError.message,
       });
     }
 

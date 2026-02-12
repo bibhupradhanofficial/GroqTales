@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (royaltyPercentage === undefined || royaltyPercentage === null) {
+    if (royaltyPercentage === undefined || royaltyPercentage === null || typeof royaltyPercentage !== 'number' || isNaN(royaltyPercentage)) {
       return NextResponse.json(
-        { success: false, error: 'royaltyPercentage is required' },
+        { success: false, error: 'royaltyPercentage must be a number' },
         { status: 400 }
       );
     }

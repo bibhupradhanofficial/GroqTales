@@ -99,7 +99,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {earnings ? `${earnings.totalEarned.toFixed(4)} ETH` : '0.0000 ETH'}
+              {earnings ? `${(earnings.totalEarned ?? 0).toFixed(4)} ETH` : '0.0000 ETH'}
             </div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               {address ? (

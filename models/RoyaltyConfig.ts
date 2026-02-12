@@ -1,8 +1,8 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
 export interface IRoyaltyConfig extends Document {
-  nftId: Types.ObjectId;
-  storyId: Types.ObjectId;
+  nftId?: Types.ObjectId;
+  storyId?: Types.ObjectId;
   creatorWallet: string;
   royaltyPercentage: number;
   isActive: boolean;

@@ -88,6 +88,7 @@ export async function recordRoyaltyTransaction(
 
   const royaltyAmount = salePrice * (config.royaltyPercentage / 100);
 
+  // Step 1: Create transaction as pending
   const transaction = await RoyaltyTransaction.create({
     nftId,
     salePrice,
@@ -97,18 +98,29 @@ export async function recordRoyaltyTransaction(
     buyerWallet: buyerWallet.toLowerCase(),
     creatorWallet: config.creatorWallet,
     txHash,
-    status: 'completed',
+    status: 'pending',
   });
 
-  // Update creator earnings
-  await CreatorEarnings.findOneAndUpdate(
-    { creatorWallet: config.creatorWallet },
-    {
-      $inc: { totalEarned: royaltyAmount, pendingPayout: royaltyAmount, totalSales: 1 },
-      $set: { lastUpdated: new Date() },
-    },
-    { upsert: true }
-  );
+  try {
+    // Step 2: Update creator earnings atomically
+    await CreatorEarnings.findOneAndUpdate(
+      { creatorWallet: config.creatorWallet },
+      {
+        $inc: { totalEarned: royaltyAmount, pendingPayout: royaltyAmount, totalSales: 1 },
+        $set: { lastUpdated: new Date() },
+      },
+      { upsert: true }
+    );
+
+    // Step 3: Mark transaction as completed
+    transaction.status = 'completed';
+    await transaction.save();
+  } catch (earningsError) {
+    // If earnings update fails, mark transaction as failed
+    transaction.status = 'failed';
+    await transaction.save();
+    throw earningsError;
+  }
 
   return transaction;
 }
