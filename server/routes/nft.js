@@ -179,8 +179,9 @@ router.post('/mint', authRequired, async (req, res) => {
     await nft.save();
 
     // Create default royalty config for the new NFT (non-critical)
+    const walletRegex = /^0x[a-fA-F0-9]{40}$/;
     try {
-      if (walletAddr) {
+      if (walletAddr && walletRegex.test(walletAddr)) {
         const config = await RoyaltyConfig.create({
           nftId: nft._id,
           storyId: story._id,
@@ -190,6 +191,12 @@ router.post('/mint', authRequired, async (req, res) => {
         });
         nft.royaltyConfigId = config._id;
         await nft.save();
+      } else if (walletAddr) {
+        logger.warn('Invalid creatorWallet format, skipping royalty config', {
+          requestId: req.id,
+          component: 'nft-royalty',
+          nftId: nft._id,
+        });
       }
     } catch (royaltyError) {
       logger.error('Failed to create royalty config (non-critical)', {

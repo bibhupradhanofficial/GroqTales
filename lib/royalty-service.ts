@@ -34,16 +34,19 @@ export async function configureRoyalty(
     throw new Error('Either nftId or storyId is required');
   }
 
-  const filter: Record<string, unknown> = {
-    creatorWallet: creatorWallet.toLowerCase(),
-  };
-  if (nftId) filter.nftId = nftId;
-  if (storyId) filter.storyId = storyId;
+  // Filter on nftId or storyId alone to ensure unique config per asset
+  const filter: Record<string, unknown> = {};
+  if (nftId) {
+    filter.nftId = nftId;
+  } else if (storyId) {
+    filter.storyId = storyId;
+  }
 
   const config = await RoyaltyConfig.findOneAndUpdate(
     filter,
     {
       ...filter,
+      creatorWallet: creatorWallet.toLowerCase(),
       royaltyPercentage,
       isActive: true,
     },
