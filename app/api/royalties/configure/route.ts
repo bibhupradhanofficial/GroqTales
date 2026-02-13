@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/dbConnect';
 import { configureRoyalty, getRoyaltyConfig } from '@/lib/royalty-service';
 
 /**
  * POST /api/royalties/configure
  * Create or update a royalty configuration for an NFT or story.
+ * Protected: requires authenticated session.
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
     let body;
@@ -89,6 +100,14 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(request.url);

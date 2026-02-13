@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/dbConnect';
 import { getCreatorTransactions } from '@/lib/royalty-service';
 
 /**
  * GET /api/royalties/transactions/[wallet]?page=1&limit=10&status=completed
  * Fetch paginated royalty transaction history for a creator.
+ * Protected: requires authenticated session or internal API key.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: { wallet: string } }
 ) {
   try {
+    // Allow access if: user is authenticated OR internal API key matches
+    const session = await getServerSession(authOptions);
+    const internalKey = request.headers.get('x-internal-api-key');
+    const expectedKey = process.env.INTERNAL_API_KEY;
+    const isInternalCall = expectedKey && internalKey === expectedKey;
+
+    if (!session && !isInternalCall) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await dbConnect();
 
     const { wallet } = params;
@@ -19,28 +35,6 @@ export async function GET(
       return NextResponse.json(
         { success: false, error: 'Wallet address is required' },
         { status: 400 }
-      );
-    }
-
-    // SECURITY WARNING: Header-based wallet verification is NOT secure for production.
-    // The x-wallet-address header can be spoofed by any client.
-    // TODO: Implement proper wallet ownership verification using one of:
-    //   1. Signed message verification (personal_sign + ecrecover)
-    //   2. Session/JWT tokens issued after wallet signature verification
-    //   3. Server-side session tied to authenticated wallet
-    // For now, this provides basic access control for internal/demo use only.
-    const requestingWallet = request.headers.get('x-wallet-address')?.toLowerCase();
-    const internalKey = request.headers.get('x-internal-api-key');
-    const expectedKey = process.env.INTERNAL_API_KEY;
-
-    // Allow access if: internal API key matches OR requesting wallet matches params wallet
-    const isInternalCall = expectedKey && internalKey === expectedKey;
-    const isOwner = requestingWallet === wallet.toLowerCase();
-
-    if (!isInternalCall && !isOwner) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized - wallet mismatch or missing credentials' },
-        { status: 403 }
       );
     }
 

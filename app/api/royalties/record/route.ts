@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/dbConnect';
 import { recordRoyaltyTransaction } from '@/lib/royalty-service';
 
 /**
  * POST /api/royalties/record
  * Record a royalty transaction when an NFT sale occurs.
- * Protected: requires x-internal-api-key header matching INTERNAL_API_KEY env var.
+ * Protected: requires authenticated session or internal API key.
  */
 export async function POST(request: NextRequest) {
   try {
-    // Authenticate internal callers via API key
+    // Allow access if: user is authenticated OR internal API key matches
+    const session = await getServerSession(authOptions);
     const apiKey = request.headers.get('x-internal-api-key');
     const expectedKey = process.env.INTERNAL_API_KEY;
+    const isInternalCall = expectedKey && apiKey === expectedKey;
 
-    if (!expectedKey || apiKey !== expectedKey) {
+    if (!session && !isInternalCall) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }

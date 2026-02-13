@@ -1,6 +1,6 @@
-import RoyaltyConfig, { IRoyaltyConfig } from '@/models/RoyaltyConfig';
-import RoyaltyTransaction, { IRoyaltyTransaction } from '@/models/RoyaltyTransaction';
-import CreatorEarnings, { ICreatorEarnings } from '@/models/CreatorEarnings';
+import RoyaltyConfig, { IRoyaltyConfig } from '../models/RoyaltyConfig';
+import RoyaltyTransaction, { IRoyaltyTransaction } from '../models/RoyaltyTransaction';
+import CreatorEarnings, { ICreatorEarnings } from '../models/CreatorEarnings';
 
 const WALLET_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
